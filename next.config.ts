@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
+  generateEtags: true,
   experimental: {
     // Sisipkan CSS langsung di HTML agar tidak ada request CSS yang memblokir render
     inlineCss: true,
@@ -35,10 +36,10 @@ const nextConfig: NextConfig = {
         headers: [{ key: "X-Robots-Tag", value: "index, follow" }],
       },
       {
-      // Halaman utama selalu diambil penuh (200), bukan revalidasi (304)
-      source: "/",
-      headers: [{ key: "Cache-Control", value: "no-store" }],
-    },
+        // Halaman utama selalu diambil penuh (200), bukan revalidasi (304)
+        source: "/",
+        headers: [{ key: "Cache-Control", value: "no-store" }],
+      },
     ];
   },
   images: {
