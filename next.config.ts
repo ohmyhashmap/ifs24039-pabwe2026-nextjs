@@ -34,6 +34,11 @@ const nextConfig: NextConfig = {
         source: "/((?!api-proxy).*)",
         headers: [{ key: "X-Robots-Tag", value: "index, follow" }],
       },
+      {
+      // Halaman utama selalu diambil penuh (200), bukan revalidasi (304)
+      source: "/",
+      headers: [{ key: "Cache-Control", value: "no-store" }],
+    },
     ];
   },
   images: {
