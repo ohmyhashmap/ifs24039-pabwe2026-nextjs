@@ -37,56 +37,12 @@ export default function FeedPage() {
     }
   };
 
-  const renderFeedContent = () => {
-    if (isLoading) {
-      return <LoadingSkeleton count={3} />;
-    }
-
-    if (error && posts.length === 0) {
-      return (
-        <div
-          role="alert"
-          className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm"
-        >
-          {error}
-        </div>
-      );
-    }
-
-    if (posts.length === 0) {
-      return (
-        <div className="text-center py-12 bg-slate-800/40 border border-slate-800 rounded-2xl">
-          <p className="text-slate-400">
-            Belum ada postingan. Jadilah yang pertama membuat!
-          </p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {posts.map((post, index) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            priority={index < 2}
-            currentUserId={user?.id}
-            onEdit={(p) => setEditingPost(p)}
-            onDelete={handleDelete}
-          />
-        ))}
-      </div>
-    );
-  };
-
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-bold text-slate-100">Utama & Feed</h1>
-          <p className="text-slate-400 text-sm">
-            Lihat aktivitas dan postingan terbaru
-          </p>
+          <p className="text-slate-400 text-sm">Lihat aktivitas dan postingan terbaru</p>
         </div>
         <button
           type="button"
@@ -98,13 +54,33 @@ export default function FeedPage() {
         </button>
       </div>
 
-      {renderFeedContent()}
+      {isLoading ? (
+        <LoadingSkeleton count={3} />
+      ) : error && posts.length === 0 ? (
+        <div role="alert" className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
+          {error}
+        </div>
+      ) : posts.length === 0 ? (
+        <div className="text-center py-12 bg-slate-800/40 border border-slate-800 rounded-2xl">
+          <p className="text-slate-400">Belum ada postingan. Jadilah yang pertama membuat!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {posts.map((post, index) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              priority={index < 2}
+              currentUserId={user?.id}
+              onEdit={(p) => setEditingPost(p)}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      )}
 
       {isCreateOpen && (
-        <CreatePostModal
-          isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
-        />
+        <CreatePostModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />
       )}
       {editingPost && (
         <EditPostModal

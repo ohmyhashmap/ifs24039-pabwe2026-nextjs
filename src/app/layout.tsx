@@ -11,11 +11,11 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-interface RootLayoutProps {
-  readonly children: React.ReactNode;
-}
-
-export default function RootLayout({ children }: RootLayoutProps) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
     <html lang="id">
       <body className={inter.className}>
