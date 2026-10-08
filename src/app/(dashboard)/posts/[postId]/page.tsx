@@ -15,7 +15,7 @@ const ChangeCoverModal = dynamic(
   { ssr: false }
 );
 
-export default function PostDetailPage({ params }: { params: Promise<{ postId: string }> }) {
+export default function PostDetailPage({ params }: Readonly<{ params: Promise<{ postId: string }> }>) {
   const resolvedParams = use(params);
   const postId = resolvedParams.postId;
   const dispatch = useAppDispatch();

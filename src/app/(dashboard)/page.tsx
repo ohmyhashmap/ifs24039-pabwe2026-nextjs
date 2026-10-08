@@ -8,6 +8,7 @@ import PostCard from "@/features/posts/components/PostCard";
 import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
 import { Post } from "@/types";
 import { HiPlus } from "react-icons/hi2";
+import type { ReactNode } from "react";
 
 // Modal baru dimuat saat pertama kali dibutuhkan
 const CreatePostModal = dynamic(
@@ -37,6 +38,38 @@ export default function FeedPage() {
     }
   };
 
+  let feedContent: ReactNode;
+  if (isLoading) {
+    feedContent = <LoadingSkeleton count={3} />;
+  } else if (error && posts.length === 0) {
+    feedContent = (
+      <div role="alert" className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
+        {error}
+      </div>
+    );
+  } else if (posts.length === 0) {
+    feedContent = (
+      <div className="text-center py-12 bg-slate-800/40 border border-slate-800 rounded-2xl">
+        <p className="text-slate-400">Belum ada postingan. Jadilah yang pertama membuat!</p>
+      </div>
+    );
+  } else {
+    feedContent = (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {posts.map((post, index) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            priority={index < 2}
+            currentUserId={user?.id}
+            onEdit={(p) => setEditingPost(p)}
+            onDelete={handleDelete}
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
@@ -54,30 +87,7 @@ export default function FeedPage() {
         </button>
       </div>
 
-      {isLoading ? (
-        <LoadingSkeleton count={3} />
-      ) : error && posts.length === 0 ? (
-        <div role="alert" className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
-          {error}
-        </div>
-      ) : posts.length === 0 ? (
-        <div className="text-center py-12 bg-slate-800/40 border border-slate-800 rounded-2xl">
-          <p className="text-slate-400">Belum ada postingan. Jadilah yang pertama membuat!</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map((post, index) => (
-            <PostCard
-              key={post.id}
-              post={post}
-              priority={index < 2}
-              currentUserId={user?.id}
-              onEdit={(p) => setEditingPost(p)}
-              onDelete={handleDelete}
-            />
-          ))}
-        </div>
-      )}
+      {feedContent}
 
       {isCreateOpen && (
         <CreatePostModal isOpen={isCreateOpen} onClose={() => setIsCreateOpen(false)} />

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { fetchMe } from "@/features/auth/states/authSlice";
 
-export default function AuthGuard({ children }: { children: React.ReactNode }) {
+export default function AuthGuard({ children }: Readonly<{ children: React.ReactNode }>) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const { token, user, initialized } = useAppSelector((state) => state.auth);
@@ -30,9 +30,9 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
   if (!token) {
     return (
       <main className="min-h-screen bg-slate-900 flex items-center justify-center">
-        <p role="status" aria-busy="true" className="text-slate-400 text-sm">
+        <output aria-busy="true" className="text-slate-400 text-sm">
           Memuat...
-        </p>
+        </output>
       </main>
     );
   }

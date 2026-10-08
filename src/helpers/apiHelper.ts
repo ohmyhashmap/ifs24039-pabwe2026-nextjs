@@ -11,21 +11,21 @@ export class ApiError extends Error {
 }
 
 export const getToken = (): string | null => {
-  if (typeof window !== "undefined") {
-    return localStorage.getItem("token");
+  if (typeof globalThis.window !== "undefined") {
+    return globalThis.window.localStorage.getItem("token");
   }
   return null;
 };
 
 export const setToken = (token: string): void => {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("token", token);
+  if (typeof globalThis.window !== "undefined") {
+    globalThis.window.localStorage.setItem("token", token);
   }
 };
 
 export const removeToken = (): void => {
-  if (typeof window !== "undefined") {
-    localStorage.removeItem("token");
+  if (typeof globalThis.window !== "undefined") {
+    globalThis.window.localStorage.removeItem("token");
   }
 };
 
@@ -69,11 +69,24 @@ export const fetchApi = async <T = unknown>(
   });
 
   // Respons bisa kosong / bukan JSON (mis. 204 atau error gateway)
-  const data = await response.json().catch(() => ({}));
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch (error) {
+    if (response.status === 204 || !response.ok) {
+      data = null;
+    } else {
+      throw error;
+    }
+  }
 
   if (!response.ok) {
+    const message =
+      data && typeof data === "object" && "message" in data && typeof data.message === "string"
+        ? data.message
+        : "Terjadi kesalahan pada server";
     throw new ApiError(
-      (data as { message?: string }).message || "Terjadi kesalahan pada server",
+      message,
       response.status
     );
   }

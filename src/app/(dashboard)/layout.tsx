@@ -3,7 +3,7 @@
 import AuthGuard from "@/components/AuthGuard";
 import Navbar from "@/components/Navbar";
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default function DashboardLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <AuthGuard>
       <div className="min-h-screen bg-slate-900 flex flex-col">

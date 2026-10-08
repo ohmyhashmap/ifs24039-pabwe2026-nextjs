@@ -3,9 +3,9 @@
 import { useEffect } from "react";
 
 interface Props {
-  message: string | null;
-  type?: "success" | "error";
-  onClose: () => void;
+  readonly message: string | null;
+  readonly type?: "success" | "error";
+  readonly onClose: () => void;
 }
 
 export default function Toast({ message, type = "success", onClose }: Props) {

@@ -6,6 +6,7 @@ import { getUsers } from "@/features/users/api/userApi";
 import { setUsers, User } from "@/features/users/states/userSlice";
 import { unwrapData } from "@/helpers/apiHelper";
 import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
+import type { ReactNode } from "react";
 
 export default function UsersPage() {
   const dispatch = useAppDispatch();
@@ -36,6 +37,45 @@ export default function UsersPage() {
     };
   }, [dispatch, token]);
 
+  let usersContent: ReactNode;
+  if (loading) {
+    usersContent = <LoadingSkeleton />;
+  } else if (error) {
+    usersContent = (
+      <div role="alert" className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
+        {error}
+      </div>
+    );
+  } else if (users.length === 0) {
+    usersContent = (
+      <div className="text-center py-12 bg-slate-800/40 border border-slate-800 rounded-2xl">
+        <p className="text-slate-400">Belum ada anggota terdaftar.</p>
+      </div>
+    );
+  } else {
+    usersContent = (
+      <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {users.map((u) => (
+          <li
+            key={u.id}
+            className="flex items-center gap-4 bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4"
+          >
+            <span
+              aria-hidden="true"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white font-semibold"
+            >
+              {(u.name || "?").charAt(0).toUpperCase()}
+            </span>
+            <div className="min-w-0">
+              <p className="font-semibold text-slate-100 truncate">{u.name}</p>
+              <p className="text-sm text-slate-400 truncate">{u.email}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
   return (
     <div>
       <div className="mb-8">
@@ -43,37 +83,7 @@ export default function UsersPage() {
         <p className="text-slate-400 text-sm">Daftar pengguna yang tergabung di DelcomFeed</p>
       </div>
 
-      {loading ? (
-        <LoadingSkeleton />
-      ) : error ? (
-        <div role="alert" className="p-4 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
-          {error}
-        </div>
-      ) : users.length === 0 ? (
-        <div className="text-center py-12 bg-slate-800/40 border border-slate-800 rounded-2xl">
-          <p className="text-slate-400">Belum ada anggota terdaftar.</p>
-        </div>
-      ) : (
-        <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {users.map((u) => (
-            <li
-              key={u.id}
-              className="flex items-center gap-4 bg-slate-800/60 border border-slate-700/50 rounded-2xl p-4"
-            >
-              <span
-                aria-hidden="true"
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white font-semibold"
-              >
-                {(u.name || "?").charAt(0).toUpperCase()}
-              </span>
-              <div className="min-w-0">
-                <p className="font-semibold text-slate-100 truncate">{u.name}</p>
-                <p className="text-sm text-slate-400 truncate">{u.email}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      {usersContent}
     </div>
   );
 }

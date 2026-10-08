@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useState } from "react";
+import type { SubmitEvent } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/redux";
 import { updateProfile, updatePassword } from "@/features/users/api/userApi";
 import { fetchMe } from "@/features/auth/states/authSlice";
@@ -25,7 +26,7 @@ export default function ProfilePage() {
   const [profileMsg, setProfileMsg] = useState<string | null>(null);
   const [pwdMsg, setPwdMsg] = useState<string | null>(null);
 
-  const handleUpdateProfile = async (e: FormEvent) => {
+  const handleUpdateProfile = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       await updateProfile({ name, bio });
@@ -37,7 +38,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleUpdatePassword = async (e: FormEvent) => {
+  const handleUpdatePassword = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     try {
       await updatePassword({ old_password: oldPassword, new_password: newPassword });
@@ -61,7 +62,7 @@ export default function ProfilePage() {
         {/* Form Profil */}
         <div className="bg-slate-800/50 border border-slate-700/60 rounded-2xl p-6 shadow-xl">
           <h2 className="text-lg font-semibold text-slate-100 mb-4">Informasi Pengguna</h2>
-          {profileMsg && <p role="status" className="mb-4 text-sm text-indigo-300">{profileMsg}</p>}
+          {profileMsg && <output className="mb-4 text-sm text-indigo-300">{profileMsg}</output>}
           <form onSubmit={handleUpdateProfile} className="space-y-4">
             <div>
               <label htmlFor="prof-name" className="block text-sm font-medium text-slate-300 mb-1">Nama</label>
@@ -98,7 +99,7 @@ export default function ProfilePage() {
         {/* Form Password */}
         <div className="bg-slate-800/50 border border-slate-700/60 rounded-2xl p-6 shadow-xl">
           <h2 className="text-lg font-semibold text-slate-100 mb-4">Ubah Kata Sandi</h2>
-          {pwdMsg && <p role="status" className="mb-4 text-sm text-indigo-300">{pwdMsg}</p>}
+          {pwdMsg && <output className="mb-4 text-sm text-indigo-300">{pwdMsg}</output>}
           <form onSubmit={handleUpdatePassword} className="space-y-4">
             <div>
               <label htmlFor="prof-old" className="block text-sm font-medium text-slate-300 mb-1">Kata Sandi Lama</label>

@@ -1,15 +1,16 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect } from "react";
+import type { SubmitEvent } from "react";
 import Modal from "@/components/ui/Modal";
 import { useAppDispatch } from "@/hooks/redux";
 import { updatePost } from "../states/postSlice";
 import { Post } from "@/types";
 
 interface EditPostModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  post: Post | null;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
+  readonly post: Post | null;
 }
 
 export default function EditPostModal({ isOpen, onClose, post }: EditPostModalProps) {
@@ -25,7 +26,7 @@ export default function EditPostModal({ isOpen, onClose, post }: EditPostModalPr
     }
   }, [post]);
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!post || !title || !content) return;
 
