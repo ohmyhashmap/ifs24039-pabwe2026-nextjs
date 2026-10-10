@@ -25,13 +25,33 @@ describe("normalizePost", () => {
   });
 
   it("memetakan alias field umum", () => {
-    const p = normalizePost({ id: 6, userId: 9, createdAt: "2026-01-01", author: { id: 9, name: "A" } });
+    const p = normalizePost({
+      id: 6,
+      userId: 9,
+      createdAt: "2026-01-01",
+      author: { id: 9, name: "A" },
+      cover: "cover.jpg",
+    });
     expect(p.user_id).toBe(9);
     expect(p.created_at).toBe("2026-01-01");
     expect(p.user?.name).toBe("A");
+    expect(p.cover).toBe("cover.jpg");
   });
 
   it("normalizePosts aman untuk input bukan array", () => {
     expect(normalizePosts(undefined)).toEqual([]);
+  });
+
+  it("menangani data malformed dan mengambil ID author sebagai fallback", () => {
+    expect(normalizePost(null)).toMatchObject({
+      id: "",
+      title: "Postingan #",
+      content: "",
+      user_id: "",
+    });
+    expect(normalizePost({ owner: { id: 42, name: "Owner" } })).toMatchObject({
+      user_id: 42,
+      user: { id: 42, name: "Owner" },
+    });
   });
 });

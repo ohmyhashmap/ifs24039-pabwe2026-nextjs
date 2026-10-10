@@ -38,6 +38,7 @@ const post: Post = {
   cover: "https://example.test/cover.jpg",
   user: author,
 };
+const postWithoutTitle = { ...post, title: undefined } as unknown as Post;
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -53,6 +54,8 @@ describe("post components", () => {
     const { rerender } = render(
       <ChangeCoverModal isOpen onClose={onClose} onSuccess={onSuccess} postId={3} />
     );
+    fireEvent.submit(screen.getByRole("button", { name: "Perbarui Cover" }).closest("form")!);
+    expect(mocks.updateCover).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText("URL Gambar"), {
       target: { value: "https://example.test/new.jpg" },
     });
@@ -68,6 +71,13 @@ describe("post components", () => {
     });
     fireEvent.click(screen.getByRole("button", { name: "Perbarui Cover" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Cover failed");
+
+    mocks.updateCover.mockRejectedValueOnce({});
+    fireEvent.change(screen.getByLabelText("URL Gambar"), {
+      target: { value: "https://example.test/fail-empty.jpg" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Perbarui Cover" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Gagal memperbarui gambar sampul");
   });
 
   it("creates posts and closes after dispatch", async () => {
@@ -97,6 +107,15 @@ describe("post components", () => {
     fireEvent.click(screen.getByRole("button", { name: "Simpan Perubahan" }));
     await waitFor(() => expect(mocks.dispatch).toHaveBeenCalledOnce());
     expect(onClose).toHaveBeenCalledOnce();
+
+    rerender(<EditPostModal isOpen onClose={onClose} post={{ ...post, title: "", content: "" }} />);
+    expect(screen.getByLabelText("Judul")).toHaveValue("");
+    expect(screen.getByLabelText("Konten")).toHaveValue("");
+    fireEvent.submit(screen.getByRole("button", { name: "Simpan Perubahan" }).closest("form")!);
+    expect(mocks.dispatch).toHaveBeenCalledOnce();
+    fireEvent.change(screen.getByLabelText("Judul"), { target: { value: "Updated" } });
+    fireEvent.submit(screen.getByRole("button", { name: "Simpan Perubahan" }).closest("form")!);
+    expect(mocks.dispatch).toHaveBeenCalledOnce();
   });
 
   it("renders image, date, owner controls and fallback post metadata", () => {
@@ -114,10 +133,22 @@ describe("post components", () => {
     fireEvent.error(screen.getByRole("img", { name: "Example" }));
     expect(screen.queryByRole("img", { name: "Example" })).not.toBeInTheDocument();
 
+    rerender(<PostCard key="priority-false" post={post} priority={false} />);
+    expect(screen.getByRole("img", { name: "Example" })).toHaveAttribute("loading", "lazy");
+    expect(screen.getByRole("img", { name: "Example" })).toHaveAttribute("fetchPriority", "auto");
+
     rerender(<PostCard post={{ ...post, title: " ", cover: undefined, user: undefined }} />);
     expect(screen.getByText("Postingan #3")).toBeInTheDocument();
     expect(screen.getByText("Oleh: Pengguna Anonim")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Lihat detail postingan Postingan #3/ })).toBeInTheDocument();
+
+    rerender(<PostCard post={postWithoutTitle} currentUserId={1} />);
+    expect(screen.getByText("Postingan #3")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Edit postingan/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Hapus postingan/ })).not.toBeInTheDocument();
+
+    rerender(<PostCard post={{ ...post, title: "No actions", cover: undefined, created_at: "" }} currentUserId={2} />);
+    expect(screen.getByText("Oleh: Ari")).toBeInTheDocument();
   });
 });
 

@@ -120,6 +120,27 @@ describe("dashboard pages", () => {
     expect(screen.getByText("Memuat konten...")).toBeInTheDocument();
   });
 
+  it("normalizes wrapped user lists and uses fallback errors and names", async () => {
+    mocks.getUsers.mockResolvedValueOnce({ data: { users: [{ ...sampleUser, name: "" }] } });
+    const { rerender } = render(<UsersPage />);
+    await waitFor(() => expect(mocks.dispatch).toHaveBeenCalled());
+    mocks.state.users.users = [{ ...sampleUser, name: "" }];
+    rerender(<UsersPage />);
+    expect(screen.getByText("?")).toBeInTheDocument();
+
+    mocks.getUsers.mockResolvedValueOnce({ data: {} });
+    const emptyList = render(<UsersPage />);
+    await waitFor(() => expect(mocks.dispatch).toHaveBeenCalledTimes(2));
+    mocks.state.users.users = [];
+    emptyList.rerender(<UsersPage />);
+    expect(screen.getByText("Belum ada anggota terdaftar.")).toBeInTheDocument();
+    emptyList.unmount();
+
+    mocks.getUsers.mockRejectedValueOnce({});
+    render(<UsersPage />);
+    expect(await screen.findByRole("alert")).toHaveTextContent("Gagal memuat daftar anggota");
+  });
+
   it("submits profile and password forms and reports failures", async () => {
     render(<ProfilePage />);
     fireEvent.change(screen.getByLabelText("Nama"), { target: { value: "Ari Baru" } });
@@ -144,6 +165,29 @@ describe("dashboard pages", () => {
     expect(await screen.findByText("Password failed")).toBeInTheDocument();
   });
 
+  it("covers profile initialization and fallback messages without a loaded user", async () => {
+    mocks.state.auth.user = null;
+    const { rerender } = render(<ProfilePage />);
+    expect(screen.getByLabelText("Nama")).toHaveValue("");
+    expect(screen.getByLabelText("Bio")).toHaveValue("");
+
+    mocks.state.auth.user = { ...sampleUser, name: "", bio: null };
+    rerender(<ProfilePage />);
+    expect(screen.getByLabelText("Nama")).toHaveValue("");
+    expect(screen.getByLabelText("Bio")).toHaveValue("");
+
+    mocks.updateProfile.mockRejectedValueOnce({});
+    fireEvent.change(screen.getByLabelText("Nama"), { target: { value: "Ari" } });
+    fireEvent.click(screen.getByRole("button", { name: "Simpan Profil" }));
+    expect(await screen.findByText("Gagal memperbarui profil")).toBeInTheDocument();
+
+    mocks.updatePassword.mockRejectedValueOnce({});
+    fireEvent.change(screen.getByLabelText("Kata Sandi Lama"), { target: { value: "old" } });
+    fireEvent.change(screen.getByLabelText("Kata Sandi Baru"), { target: { value: "new" } });
+    fireEvent.click(screen.getByRole("button", { name: "Ubah Sandi" }));
+    expect(await screen.findByText("Gagal memperbarui kata sandi")).toBeInTheDocument();
+  });
+
   it("renders post detail loading, error, cover, author and fallback states", async () => {
     const params = Object.assign(Promise.resolve({ postId: "7" }), {
       status: "fulfilled",
@@ -158,7 +202,12 @@ describe("dashboard pages", () => {
     rerender(page());
     expect(screen.getByRole("alert")).toHaveTextContent("Missing post");
 
-    mocks.state.posts = { posts: [], selectedPost: samplePost, isLoading: false, error: null };
+    mocks.state.posts = {
+      posts: [],
+      selectedPost: { ...samplePost, user: sampleUser },
+      isLoading: false,
+      error: null,
+    };
     rerender(page());
     expect(screen.getByText("Post body")).toBeInTheDocument();
     expect(screen.getByText("Ubah Cover")).toBeInTheDocument();
@@ -173,6 +222,14 @@ describe("dashboard pages", () => {
     rerender(page());
     expect(screen.queryByText("Cover gagal dimuat, ganti gambar")).not.toBeInTheDocument();
     expect(screen.getByText("Post body")).toBeInTheDocument();
+
+    mocks.state.auth.token = null;
+    mocks.state.posts.selectedPost = { ...samplePost, cover: undefined };
+    mocks.state.auth.user = sampleUser;
+    rerender(page());
+    expect(screen.getByText("Tambah Gambar Sampul (Cover)")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Tambah Gambar Sampul (Cover)" }));
+    expect(mocks.dispatch).toHaveBeenCalled();
   });
 });
 
@@ -192,6 +249,12 @@ describe("authentication pages", () => {
     mocks.dispatch.mockResolvedValueOnce(loginUser.rejected(null, "login-request", {}, "Invalid credentials"));
     fireEvent.click(screen.getByRole("button", { name: "Masuk" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid credentials");
+
+    mocks.dispatch.mockResolvedValueOnce(loginUser.rejected(null, "login-request", {}, ""));
+    fireEvent.click(screen.getByRole("button", { name: "Masuk" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Gagal melakukan login. Periksa kembali kredensial Anda."
+    );
   });
 
   it("validates registration password, submits registration and shows failures", async () => {
@@ -215,5 +278,9 @@ describe("authentication pages", () => {
     mocks.fetchApi.mockRejectedValueOnce(new Error("Registration failed"));
     fireEvent.click(screen.getByRole("button", { name: "Daftar" }));
     expect(await screen.findByRole("alert")).toHaveTextContent("Registration failed");
+
+    mocks.fetchApi.mockRejectedValueOnce({});
+    fireEvent.click(screen.getByRole("button", { name: "Daftar" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Gagal melakukan pendaftaran.");
   });
 });
